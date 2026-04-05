@@ -1,4 +1,5 @@
 import { Profile } from "@/types";
+import {fetchProfile} from "@/engine/cookie";
 
 
 class ProfileController {
@@ -6,14 +7,19 @@ class ProfileController {
     private profile: Profile;
     private listeners: ((profile: Profile | null) => void)[] = [];
 
-    private constructor() {}
+    private constructor () {}
 
-    static getInstance(): ProfileController {
+    static getInstance (): ProfileController {
         if(!ProfileController.instance) {
             ProfileController.instance = new ProfileController();
+            Promise.resolve(ProfileController.instance.initialise());
         }
 
         return ProfileController.instance;
+    }
+
+    private async initialise(): Promise<void> {
+        this.profile = await fetchProfile();
     }
 
     setProfile(profile: Profile): void {
@@ -31,7 +37,7 @@ class ProfileController {
         this.notifyListeners()
     }
 
-    getProfile(): Profile | null {
+    getProfile(): Profile {
         return this.profile
     }
 

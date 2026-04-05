@@ -1,51 +1,48 @@
+import { Profile, TempoProfile } from "@/types";
+import ProfileController from "./profile";
+import { EMA, getIntervals, intervalsToFrequency, meanAvg, stdDev } from "@/engine/util";
 
-type ApplySigmoidClamp = (
-    value: number,
-    avg: number,
-    /**
-     * Registered deviation value
-     */
-    range: number,
-    /** 
-     * Learning rate
-    */
-    strength?: number
-) => number;
+const alpha_min = 0.04;
+const alpha_max = 0.135;
+const decay_rate = 80;
+const rise_rate = 12;
 
-const learningRate = 0.1;
-
-
-/**
- * 
- * @param value Observed value to be clamped
- * @param avg Centre value that reflects the mean rate
- * @param range Value which records standard deviation from mean
- * @param strength learningRate, defaults to `0.1`. `0 ≥ strength ≥ 1`
- * @returns clamped value to be used in live prediction of type `number`. 
- */
-const applySigmoidClamp: ApplySigmoidClamp = (value, avg, range, strength = learningRate) => {
-    const x = (value - avg) / range;
-    return avg + range * Math.tanh(x * strength);
+const calculateLearningRate = (n: number): number => {
+    return alpha_min + alpha_max * (1 - Math.exp(-n / rise_rate)) - alpha_max * (1 - Math.exp(-n / decay_rate));
 }
 
 type ApplyInfluenceDeviationClamp = (
     observed: number,
     avg: number,
+    n: number,
     strength?: number
 ) => number;
 
 /**
  * 
- * @param observed observed extreme value outside deviation to be clamped.
- * @param avg mean average data from user profile to be clamped towards.
- * @param strength learningRate, defaults to `0.1`. `0 ≥ strength ≥ 1`
- * @returns clamped *new average* value for profile storage of type `number`
+ * @param mean mean average as recorded in profile
+ * @param observed value observed during typing session
+ * @param deviation deviation as recorded in profile
+ * @param n number of samples for that specific event
+ * @returns new mean average to be recoreded in profile
  */
-const applyInfluenceDeviationClamp: ApplyInfluenceDeviationClamp = (observed, avg, strength = learningRate) => {
-    const deviation: number = observed / avg;
-    const weight: number = 1 / (1 + deviation);
-    return avg * (1 - strength * weight) + observed * (strength * weight);
-} 
+function emaUpdate(
+  mean: number,
+  observed: number,
+  deviation: number | undefined,
+  n: number
+) {
+  const alpha = calculateLearningRate(n);
+
+  if (!deviation || deviation === 0) {
+    return mean + alpha * (observed - mean);
+  }
+
+  const z = Math.abs((observed - mean) / deviation);
+  const weight = 1 / (1 + z);
+
+  return mean + alpha * weight * (observed - mean);
+}
 
 export enum ConfidenceLevel {
     OneSigma = 1,    // ~68% of values
@@ -86,3 +83,51 @@ const isWithinDeviationRange: IsWithinDeviationRange = (observed, avg, deviation
     return observed >= min && observed <= max;
 }
 
+type Signal = "type" | "edit" | "pause" | "fire";
+
+const signalToData = (signal: Signal): {value: number, deviation?: number, n: number} => {
+    const profile = ProfileController.getInstance().getProfile();
+    switch(signal) {
+        case "type":
+            return {
+                value: profile.tempoProfile.meanCPS,
+                deviation: profile.tempoProfile.deviation,
+                n: profile.samples.tempo
+            }
+        case "edit":
+            return {
+                value: profile.editRate,
+                n: profile.samples.edit,
+            }
+        case "fire":
+            return {
+                value: profile.fireTolerance,
+                n: profile.samples.fireTolerance
+            }
+        case "pause":
+            return {
+                value: profile.pauseProfile.meanPause,
+                deviation: profile.pauseProfile.deviation,
+                n: profile.samples.pause
+            }
+    }
+}
+
+/**
+ * Updates local profile with new tempo values to include recent data.
+ * @remarks Use in sessions only, DO NOT calculate long-term profile using this function.
+ * @param profile an instance of localProfile stored in `Session`.
+ * @param timestamps timestamps of typing events with omitted deletion events.
+ * @returns 
+ */
+export const updateLocalTempoProfile = (tempoProfile: TempoProfile, timestamps: number[]): TempoProfile => {
+
+    const intervals = getIntervals(timestamps);
+    const mean = meanAvg(intervals);
+    const dev = stdDev(intervals, mean);
+
+    tempoProfile.meanCPS = EMA(tempoProfile.meanCPS, intervalsToFrequency(intervals), 0.2)
+    tempoProfile.deviation = EMA(tempoProfile.deviation, dev, 0.2);
+
+    return tempoProfile; // TO DO: Modularise this by passing tempoProfile instead of localProfile
+}

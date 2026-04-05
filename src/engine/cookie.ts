@@ -1,4 +1,4 @@
-import { DEFAULT_PROFILE } from "@/profile/defaultProfile";
+import { DEFAULT_PROFILE } from "@/profile/default";
 import { Profile } from "@/types";
 
 export type ProfileCookie = {
