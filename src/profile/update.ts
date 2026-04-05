@@ -1,4 +1,4 @@
-import { Profile, TempoProfile } from "@/types";
+import { Profile, ProfileSamples, TempoProfile } from "@/types";
 import ProfileController from "./profile";
 import { EMA, getIntervals, intervalsToFrequency, meanAvg, stdDev } from "@/engine/util";
 
@@ -120,14 +120,16 @@ const signalToData = (signal: Signal): {value: number, deviation?: number, n: nu
  * @param timestamps timestamps of typing events with omitted deletion events.
  * @returns 
  */
-export const updateLocalTempoProfile = (tempoProfile: TempoProfile, timestamps: number[]): TempoProfile => {
-
+export const updateLocalTempoProfile = (tempoProfile: TempoProfile, samples: ProfileSamples, timestamps: number[]): { tempoProfile: TempoProfile, samples: ProfileSamples } => {
     const intervals = getIntervals(timestamps);
     const mean = meanAvg(intervals);
     const dev = stdDev(intervals, mean);
 
     tempoProfile.meanCPS = EMA(tempoProfile.meanCPS, intervalsToFrequency(intervals), 0.2)
     tempoProfile.deviation = EMA(tempoProfile.deviation, dev, 0.2);
+    samples.tempo++
 
-    return tempoProfile; // TO DO: Modularise this by passing tempoProfile instead of localProfile
+    return { tempoProfile, samples }; 
+    /** TO DO: Modularise this by passing tempoProfile instead of localProfile */
+
 }

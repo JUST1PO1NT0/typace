@@ -99,3 +99,22 @@ export type Config = {
     */
     disableLearning?: boolean;
 }
+
+/**
+ * Type for storing session data
+ */
+export type SessionState = {
+    profile: Profile;
+    timestamps: number[];
+    typingTimeout: number;
+
+}
+
+/**
+ * Protects indirect children of an object with a `readonly` property
+ */
+export type DeepReadonly<T> = {
+    readonly [P in keyof T]: T[P] extends object
+    ? DeepReadonly<T[P]>
+    : T[P]
+}
