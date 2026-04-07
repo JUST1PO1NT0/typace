@@ -1,5 +1,5 @@
 import { Profile } from "@/types";
-import { fetchProfile } from "@/engine/cookie";
+import { fetchProfile, pushProfile } from "@/engine/cookie";
 import { DEFAULT_PROFILE } from "./default";
 
 class ProfileController {
@@ -43,6 +43,7 @@ class ProfileController {
             lastUpdated: Date.now()
         }
         this.notifyListeners()
+        pushProfile(this.profile)
     }
 
     getProfile(): Profile {

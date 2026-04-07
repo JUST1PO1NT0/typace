@@ -96,8 +96,6 @@ export const getEditLikelihood = (editState: SessionEditState, editRate: number,
     if(!editState.prevLength) editState.prevLength = 0;
     const delta = Math.abs(editState.length - editState.prevLength)
 
-    console.log(isTyping);
-
     if(delta === 0) {
         return { ...editState, effort: editState.effort++, consecutiveEdits: 0}
     }

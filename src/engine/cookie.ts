@@ -28,12 +28,12 @@ export const serialiseProfile = (profile: Profile): ProfileCookie => ({
     sp: profile.pauseProfile.samples,
     se: profile.editProfile.samples,
     sf: profile.toleranceProfile.samples,
-    tc: Math.round(profile.tempoProfile.meanCPS * 100) / 100,
+    tc: Math.round(profile.tempoProfile.meanCPS * 100) / 100, 
     td: Math.round(profile.tempoProfile.deviation * 100) / 100,
-    pc: Math.round(profile.pauseProfile.meanPause / 10),
-    pd: Math.round(profile.pauseProfile.deviation / 10),
+    pc: Math.round(profile.pauseProfile.meanPause), 
+    pd: Math.round(profile.pauseProfile.deviation), 
     er: Math.round(profile.editProfile.editRate * 100) / 100,
-    ft: Math.round(profile.toleranceProfile.fireTolerance * 100) / 100,
+    ft: String((profile.toleranceProfile.fireTolerance).toFixed(5)),
     ts: profile.lastUpdated ?? Date.now()
 });
 
@@ -48,9 +48,8 @@ export const deserialiseProfile = (cookie: ProfileCookie): Profile => ({
         samples: cookie.st,
     },
     pauseProfile: {
-        meanPause: cookie.pc * 1000,
-        deviation: cookie.pd * 1000,
-        //longPauseThreshold: (cookie.pc * 10) + (2 * cookie.pd * 10),
+        meanPause: cookie.pc,  
+        deviation: cookie.pd,  
         samples: cookie.sp
     },
     editProfile: {

@@ -1,4 +1,7 @@
 node_modules
-/dist
-/dist/*
+dist
+dist/*
 ./*.tgz
+**.OLD
+/.idea
+*.tgz

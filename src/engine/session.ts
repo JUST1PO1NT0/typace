@@ -32,12 +32,14 @@ const stopSession = () => {
         clearInterval(intervalId);
         intervalId = null;
         const state = sessionStore.getState();
+        console.log("Pushable state:", state)
         profileController.updateProfile({
             ...state.profile,
             editProfile: updateEditProfile(state.profile.editProfile, state.edit)
         });
         
         sessionStore.setState(() => sessionStore.getInitialState());
+        console.log("Reset state:", sessionStore.getState())
     } else {
         throw new Error("Interval ID not found. Execution failed.");
     }
@@ -65,7 +67,7 @@ const processTick = () => {
             const intervals = interval ? [...state.pause.intervals, interval] : state.pause.intervals;
             const pauseProfile = state.fire.hasFired
                 ? updateLocalPauseProfile(state.profile.pauseProfile, intervals, true, true)
-                : updateLocalPauseProfile(state.profile.pauseProfile, intervals);
+                : state.pause.start ? updateLocalPauseProfile(state.profile.pauseProfile, intervals) : state.profile.pauseProfile;
 
             return {
                 ...state,

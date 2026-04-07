@@ -108,7 +108,6 @@ var getWeightedPauseThreshold = (timeoutInterval, editSignal, fireTolerance) => 
 var getEditLikelihood = (editState, editRate, isTyping) => {
   if (!editState.prevLength) editState.prevLength = 0;
   const delta = Math.abs(editState.length - editState.prevLength);
-  console.log(isTyping);
   if (delta === 0) {
     return { ...editState, effort: editState.effort++, consecutiveEdits: 0 };
   }
@@ -204,6 +203,21 @@ var DEFAULT_PROFILE = {
 
 // src/engine/cookie.ts
 var COOKIE_NAME = "typace_profile";
+var DEFAULT_EXPIRES_DAYS = 365;
+var serialiseProfile = (profile) => ({
+  v: profile.version,
+  st: profile.tempoProfile.samples,
+  sp: profile.pauseProfile.samples,
+  se: profile.editProfile.samples,
+  sf: profile.toleranceProfile.samples,
+  tc: Math.round(profile.tempoProfile.meanCPS * 100) / 100,
+  td: Math.round(profile.tempoProfile.deviation * 100) / 100,
+  pc: Math.round(profile.pauseProfile.meanPause),
+  pd: Math.round(profile.pauseProfile.deviation),
+  er: Math.round(profile.editProfile.editRate * 100) / 100,
+  ft: String(profile.toleranceProfile.fireTolerance.toFixed(5)),
+  ts: profile.lastUpdated ?? Date.now()
+});
 var deserialiseProfile = (cookie) => ({
   version: cookie.v,
   tempoProfile: {
@@ -212,9 +226,8 @@ var deserialiseProfile = (cookie) => ({
     samples: cookie.st
   },
   pauseProfile: {
-    meanPause: cookie.pc * 1e3,
-    deviation: cookie.pd * 1e3,
-    //longPauseThreshold: (cookie.pc * 10) + (2 * cookie.pd * 10),
+    meanPause: cookie.pc,
+    deviation: cookie.pd,
     samples: cookie.sp
   },
   editProfile: {
@@ -231,10 +244,22 @@ var getCookie = async (name) => {
   const cookie = await cookieStore.get({ name });
   return cookie ? cookie.value : void 0;
 };
+var setCookie = async (name, value, expiresDays = DEFAULT_EXPIRES_DAYS) => {
+  await cookieStore.set({
+    name,
+    value,
+    expires: Date.now() + expiresDays * 24 * 60 * 60 * 1e3,
+    sameSite: "none"
+  });
+};
 var fetchProfile = async () => {
   const cookieData = await getCookie(COOKIE_NAME) ?? void 0;
   if (!cookieData) return DEFAULT_PROFILE;
   return deserialiseProfile(JSON.parse(cookieData));
+};
+var pushProfile = async (profile) => {
+  const pushableData = JSON.stringify(serialiseProfile(profile));
+  await setCookie(COOKIE_NAME, pushableData);
 };
 
 // src/profile/profile.ts
@@ -271,6 +296,7 @@ var ProfileController = class _ProfileController {
       lastUpdated: Date.now()
     };
     this.notifyListeners();
+    pushProfile(this.profile);
   }
   getProfile() {
     console.log("asked for profile and got this", this.profile);
@@ -340,11 +366,13 @@ var stopSession = () => {
     clearInterval(intervalId);
     intervalId = null;
     const state = sessionStore.getState();
+    console.log("Pushable state:", state);
     profile_default.updateProfile({
       ...state.profile,
       editProfile: updateEditProfile(state.profile.editProfile, state.edit)
     });
     sessionStore.setState(() => sessionStore.getInitialState());
+    console.log("Reset state:", sessionStore.getState());
   } else {
     throw new Error("Interval ID not found. Execution failed.");
   }
@@ -364,7 +392,7 @@ var processTick = () => {
     if (state.typing.timeout > now) {
       const interval = state.pause.start ? now - state.pause.start : void 0;
       const intervals = interval ? [...state.pause.intervals, interval] : state.pause.intervals;
-      const pauseProfile2 = state.fire.hasFired ? updateLocalPauseProfile(state.profile.pauseProfile, intervals, true, true) : updateLocalPauseProfile(state.profile.pauseProfile, intervals);
+      const pauseProfile2 = state.fire.hasFired ? updateLocalPauseProfile(state.profile.pauseProfile, intervals, true, true) : state.pause.start ? updateLocalPauseProfile(state.profile.pauseProfile, intervals) : state.profile.pauseProfile;
       return {
         ...state,
         profile: {
