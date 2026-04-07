@@ -1,13 +1,16 @@
 import { createStore } from 'zustand/vanilla';
-import ProfileController from "@/profile/profile";
 import { SessionState } from "@/types";
+import profileController from '@/profile/profile';
 
 const initialState: SessionState = {
     profile: {
-        ...ProfileController.getInstance().getProfile()
+        ...profileController.getProfile()
     },
     timestamps: [] as number[],
-    typingTimeout: 0,
+    typing: {
+        timeout: 0,
+        interval: 0
+    },
     edit: {
         length: 0,
         prevLength: undefined,
@@ -15,7 +18,26 @@ const initialState: SessionState = {
         progress: 0,
         consecutiveEdits: 0,
         signal: 0,
-    }
+    },
+    pause: {
+        start: null,
+        timeout: undefined,
+        interval: undefined,
+        intervals: [] as number[],
+        awaitedFalsePositive: false,
+    },
+    fire: {
+        hasFired: false
+    },
+    terminated: false
 };
 
 export const sessionStore = createStore<SessionState>(() => initialState);
+
+profileController.subscribe((updatedProfile) => {
+    if (updatedProfile) {
+        sessionStore.setState({ 
+            profile: { ...updatedProfile } 
+        });
+    }
+});

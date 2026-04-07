@@ -1,6 +1,6 @@
-import { PauseProfile, Profile, ProfileSamples, TempoProfile } from "@/types";
+import { EditProfile, PauseProfile, Profile, ProfileSamples, SessionEditState, TempoProfile, ToleranceProfile } from "@/types";
 import ProfileController from "./profile";
-import { EMA, getIntervals, intervalsToFrequency, meanAvg, stdDev } from "@/engine/util";
+import { EMA, getAlpha, getIntervals, intervalsToFrequency, meanAvg, stdDev } from "@/engine/util";
 
 const alpha_min = 0.04;
 const alpha_max = 0.135;
@@ -85,33 +85,33 @@ const isWithinDeviationRange: IsWithinDeviationRange = (observed, avg, deviation
 
 type Signal = "type" | "edit" | "pause" | "fire";
 
-const signalToData = (signal: Signal): {value: number, deviation?: number, n: number} => {
-    const profile = ProfileController.getInstance().getProfile();
-    switch(signal) {
-        case "type":
-            return {
-                value: profile.tempoProfile.meanCPS,
-                deviation: profile.tempoProfile.deviation,
-                n: profile.tempoProfile.samples
-            }
-        case "edit":
-            return {
-                value: profile.editProfile.editRate,
-                n: profile.editProfile.samples,
-            }
-        case "fire":
-            return {
-                value: profile.toleranceProfile.fireTolerance,
-                n: profile.toleranceProfile.samples
-            }
-        case "pause":
-            return {
-                value: profile.pauseProfile.meanPause,
-                deviation: profile.pauseProfile.deviation,
-                n: profile.pauseProfile.samples
-            }
-    }
-}
+//const signalToData = (signal: Signal): {value: number, deviation?: number, n: number} => {
+//    const profile = ProfileController.getInstance().getProfile();
+//    switch(signal) {
+//        case "type":
+//            return {
+//                value: profile.tempoProfile.meanCPS,
+//                deviation: profile.tempoProfile.deviation,
+//                n: profile.tempoProfile.samples
+//            }
+//        case "edit":
+//            return {
+//                value: profile.editProfile.editRate,
+//                n: profile.editProfile.samples,
+//            }
+//        case "fire":
+//            return {
+//                value: profile.toleranceProfile.fireTolerance,
+//                n: profile.toleranceProfile.samples
+//            }
+//        case "pause":
+//            return {
+//                value: profile.pauseProfile.meanPause,
+//                deviation: profile.pauseProfile.deviation,
+//                n: profile.pauseProfile.samples
+//            }
+//    }
+//}
 
 /**
  * Updates local profile with new tempo values to include recent data.
@@ -121,12 +121,13 @@ const signalToData = (signal: Signal): {value: number, deviation?: number, n: nu
  * @returns new `tempoProfile` and `samples`
 */
 export const updateLocalTempoProfile = (tempoProfile: TempoProfile, timestamps: number[]): TempoProfile => {
+    const s = tempoProfile.samples
     const intervals = getIntervals(timestamps);
     const mean = meanAvg(intervals);
     const dev = stdDev(intervals, mean);
 
-    tempoProfile.meanCPS = EMA(tempoProfile.meanCPS, intervalsToFrequency(intervals), tempoProfile.samples)
-    tempoProfile.deviation = EMA(tempoProfile.deviation, dev, tempoProfile.samples);
+    tempoProfile.meanCPS = EMA(tempoProfile.meanCPS, intervalsToFrequency(intervals), s)
+    tempoProfile.deviation = EMA(tempoProfile.deviation, dev, s);
     tempoProfile.samples++
 
     return tempoProfile; 
@@ -134,12 +135,44 @@ export const updateLocalTempoProfile = (tempoProfile: TempoProfile, timestamps: 
 
 }
 
-export const updateLocalPauseProfile = (pauseProfile: PauseProfile, intervals: number[]): PauseProfile => {
+export const updateLocalPauseProfile = (pauseProfile: PauseProfile, intervals: number[], applyDefaultGrowth: boolean = false, positiveGrowth: boolean = false): PauseProfile => {
+    const s = pauseProfile.samples
+    if(applyDefaultGrowth) { 
+        const multiplier = positiveGrowth ?
+            1 + getAlpha(s)
+            :
+            1 - getAlpha(s);
+        intervals = [...intervals, pauseProfile.meanPause * multiplier]
+    }
     const mean = meanAvg(intervals);
     const dev = stdDev(intervals, mean);
 
-    pauseProfile.meanPause = EMA(pauseProfile.meanPause, mean, pauseProfile.samples);
-    pauseProfile.deviation = EMA(pauseProfile.deviation, dev, pauseProfile.samples)
+    pauseProfile.meanPause = EMA(pauseProfile.meanPause, mean, s);
+    pauseProfile.deviation = EMA(pauseProfile.deviation, dev, s)
 
     return pauseProfile
+}
+
+export const updateToleranceProfile = (toleranceProfile: ToleranceProfile, exceededSessionTimeout: boolean): ToleranceProfile => {
+    const s = toleranceProfile.samples
+    const multiplier = exceededSessionTimeout 
+        ? Math.min(1, 1 - getAlpha(s))
+        : Math.max(0, 1 + getAlpha(s));
+
+    const fireTolerance = toleranceProfile.fireTolerance * multiplier;
+    
+    toleranceProfile.fireTolerance = fireTolerance;
+    toleranceProfile.samples++;
+
+    return toleranceProfile;
+} 
+
+export const updateEditProfile = (editProfile: EditProfile, editState: SessionEditState): EditProfile => {
+    const s = editProfile.samples;
+    const editRate = editState.progress / editState.effort;
+
+    editProfile.editRate = EMA(editProfile.editRate, editRate, s);
+    editProfile.samples++
+
+    return editProfile;
 }

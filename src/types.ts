@@ -141,10 +141,37 @@ export type SessionEditState = {
 }
 
 export type SessionPauseState = {
-    start: number,
+    /**
+     * Unix time of start of current pause.
+     */
+    start: number | null,
+    /**
+     * Unix time of `pauseTimeout` threshold *with weighting applied*
+     */
+    timeout?: number,
+    /**
+     * Current time calculated between `pauseTimeout` and `typingTimeout` *without weighting applied*.
+     */
+    interval?: number,
+    /**
+     * History of previous intervals pause start and stop *Unix time* data *based on user input*
+     * @remarks Do not use this variable to start *implicit* intervals. 'Based on user input' stands for explicit data received from typing events.
+     */
+    intervals: number[],
+    /**
+     * Boolean value if false positive fire time window has elapsed
+     */
+    awaitedFalsePositive: boolean,
+}
+
+export type SessionTypingState = {
     timeout: number,
     interval: number,
-    lengths: number[]
+}
+
+export type SessionFireState = {
+    fire?: () => void;
+    hasFired: boolean;
 }
 
 /**
@@ -153,9 +180,11 @@ export type SessionPauseState = {
 export type SessionState = {
     profile: Profile;
     timestamps: number[];
-    typingTimeout: number;
+    typing: SessionTypingState;
     edit: SessionEditState;
     pause: SessionPauseState;
+    fire: SessionFireState;
+    terminated: boolean,
 }
 
 /**

@@ -5,7 +5,8 @@
       "declaration": true,
       "outDir": "./dist",
       "rootDir": "./src",
-      "baseUrl": ".", 
+      "baseUrl": ".",
+      "esModuleInterop": true,
       "types": ["node"],
       "paths": {
         "@/*": ["src/*"]

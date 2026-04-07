@@ -13,7 +13,7 @@ export type ProfileCookie = {
     pd: number;
     er: number; // edit rate
     ft: number; // fire tolerance
-    ts: string; // timestamp
+    ts: number; // timestamp
 };
 
 export const COOKIE_NAME = "typace_profile_v1";
@@ -24,17 +24,17 @@ export const DEFAULT_EXPIRES_DAYS = 365;
  */
 export const serialiseProfile = (profile: Profile): ProfileCookie => ({
     v: profile.version,
-    st: profile.samples.tempo,
-    sp: profile.samples.pause,
-    se: profile.samples.edit,
-    sf: profile.samples.fireTolerance,
+    st: profile.tempoProfile.samples,
+    sp: profile.pauseProfile.samples,
+    se: profile.editProfile.samples,
+    sf: profile.toleranceProfile.samples,
     tc: Math.round(profile.tempoProfile.meanCPS * 100) / 100,
     td: Math.round(profile.tempoProfile.deviation * 100) / 100,
     pc: Math.round(profile.pauseProfile.meanPause / 10),
     pd: Math.round(profile.pauseProfile.deviation / 10),
-    er: Math.round(profile.editRate * 100) / 100,
-    ft: Math.round(profile.fireTolerance * 100) / 100,
-    ts: profile.lastUpdated?.toISOString() ?? new Date().toISOString()
+    er: Math.round(profile.editProfile.editRate * 100) / 100,
+    ft: Math.round(profile.toleranceProfile.fireTolerance * 100) / 100,
+    ts: profile.lastUpdated ?? Date.now()
 });
 
 /**
@@ -42,34 +42,39 @@ export const serialiseProfile = (profile: Profile): ProfileCookie => ({
  */
 export const deserialiseProfile = (cookie: ProfileCookie): Profile => ({
     version: cookie.v,
-    samples: {
-        tempo: cookie.st,
-        pause: cookie.sp,
-        edit: cookie.se,
-        fireTolerance: cookie.sf
-    },
     tempoProfile: {
         meanCPS: cookie.tc,
-        deviation: cookie.td
+        deviation: cookie.td,
+        samples: cookie.st,
     },
     pauseProfile: {
         meanPause: cookie.pc * 10,
         deviation: cookie.pd * 10,
-        longPauseThreshold: (cookie.pc * 10) + (2 * cookie.pd * 10)
+        longPauseThreshold: (cookie.pc * 10) + (2 * cookie.pd * 10),
+        samples: cookie.sp
     },
-    editRate: cookie.er,
-    fireTolerance: cookie.ft,
-    lastUpdated: new Date(cookie.ts)
+    editProfile: {
+        editRate: cookie.er,
+        samples: cookie.se
+    },
+    toleranceProfile: {
+        fireTolerance: cookie.ft,
+        samples: cookie.sf
+    },
+    lastUpdated: cookie.ts
 });
 
 const getCookie = async (name: string): Promise<string | undefined> => {
-    const cookies = new CookieStore();
-    return (await cookies.get({name: name})).name;
+    // Using the native global cookieStore
+    const cookie = await cookieStore.get({name: name});
+    return cookie ? cookie.value : undefined; 
 }
 
 const setCookie = async (name: string, value: string, expiresDays: number = DEFAULT_EXPIRES_DAYS): Promise<void> => {
-    const cookies = new CookieStore();
-    await cookies.set({name: name, value: value, expires: Date.now() + expiresDays * 24 * 60 * 60 * 1000,
+    await cookieStore.set({
+        name: name, 
+        value: value, 
+        expires: Date.now() + expiresDays * 24 * 60 * 60 * 1000,
         sameSite: "none"
     });
 }

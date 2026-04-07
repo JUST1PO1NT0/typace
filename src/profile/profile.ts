@@ -1,10 +1,12 @@
 import { Profile } from "@/types";
-import {fetchProfile} from "@/engine/cookie";
-
+import { fetchProfile } from "@/engine/cookie";
+import { DEFAULT_PROFILE } from "./default";
 
 class ProfileController {
     private static instance: ProfileController;
-    private profile: Profile;
+    
+    // FIX: TS(264) 
+    private profile: Profile = DEFAULT_PROFILE; 
     private listeners: ((profile: Profile | null) => void)[] = [];
 
     private constructor () {}
@@ -12,18 +14,24 @@ class ProfileController {
     static getInstance (): ProfileController {
         if(!ProfileController.instance) {
             ProfileController.instance = new ProfileController();
-            Promise.resolve(ProfileController.instance.initialise());
+            ProfileController.instance.initialise();
         }
 
         return ProfileController.instance;
     }
 
     private async initialise(): Promise<void> {
-        this.profile = await fetchProfile();
+        const fetchedProfile = await fetchProfile();
+        
+        // FIX: Only overwrite and notify if a profile was actually found in cookies
+        if (fetchedProfile) {
+            this.profile = fetchedProfile;
+            this.notifyListeners(); 
+        }
     }
 
     setProfile(profile: Profile): void {
-        this.profile = { ...profile, lastUpdated: new Date()}
+        this.profile = { ...profile, lastUpdated: Date.now()}
         this.notifyListeners();
     }
 
@@ -32,7 +40,7 @@ class ProfileController {
         this.profile = {
             ...this.profile,
             ...update,
-            lastUpdated: new Date()
+            lastUpdated: Date.now()
         }
         this.notifyListeners()
     }
@@ -52,4 +60,4 @@ class ProfileController {
 }
 
 const profileController = ProfileController.getInstance();
-export default ProfileController;
+export default profileController; 

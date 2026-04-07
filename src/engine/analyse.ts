@@ -1,4 +1,4 @@
-import { PauseProfile, SessionEditState } from "@/types";
+import { PauseProfile, SessionEditState, SessionTypingState, ToleranceProfile } from "@/types";
 import { getEditWeight } from "./util";
 
 interface GetTempoProfileProps {
@@ -40,7 +40,7 @@ export const shouldCountAsTyping: ShouldCountAsTyping = (inputType, isComposing)
  * @returns `timestamp + t` time threshold before which to expect a new input.
  * @remarks event-driven in `Session`.
  */
-export const getTypingTimeout = (avgCPS: number, devCPS: number, timestamp: number = new Date().getTime()) => {
+export const getTypingTimeout = (avgCPS: number, devCPS: number, timestamp: number = new Date().getTime()): SessionTypingState => {
     const devConfidence = 2;
 
     // convert to ms
@@ -48,7 +48,7 @@ export const getTypingTimeout = (avgCPS: number, devCPS: number, timestamp: numb
     const devInterval = 1000 / devCPS;
     const t = avgInterval + (devConfidence * devInterval);
 
-    return timestamp + t;
+    return {timeout: timestamp + t, interval: t};
 }
 
 type GetPauseTimeout = (
