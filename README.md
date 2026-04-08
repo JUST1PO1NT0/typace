@@ -22,3 +22,8 @@ const InputComponent: React.FC = () => {
 
 Implementing typace has been made as easy as possible. Into your input element, simply spread `bind` received from the hook.
 `useAdaptiveDebounce` will also expose debug typing session data if needed.
+
+## Contributing
+I'm very interested in making this useful for websites of all sizes, where one typing profile is shared everywhere for the library to access, so that websites which do not receive a lot of traffic may benefit from the user profiles accumulated from larger ones, or accross hundreds of smaller ones. My original idea was implementing a cookie which is cross-domain, but I have not found a solution that doesn't involve hosting a database and inserting an iframe, for which I do not have sufficient resources. If you have any ideas or resources which could lead to an implementation of this idea, *please* contact.
+
+I am keen on improving the mathematics in this repository and storing more data which could lead to better approximations of debounce times. Additionally, I am interested in different approaches to better analyse the data received. Feel free to fork this repository and contact for assistance. 
