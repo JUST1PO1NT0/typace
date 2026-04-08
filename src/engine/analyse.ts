@@ -1,5 +1,5 @@
 import { PauseProfile, SessionEditState, SessionTypingState, ToleranceProfile } from "@/types";
-import { getEditWeight } from "./util";
+import { frequencyDeviationToIntervalDeviation, getEditWeight } from "./util";
 
 interface GetTempoProfileProps {
     timestamps: number[];
@@ -45,7 +45,7 @@ export const getTypingTimeout = (avgCPS: number, devCPS: number, timestamp: numb
 
     // convert to ms
     const avgInterval = 1000 / avgCPS;
-    const devInterval = 1000 / devCPS;
+    const devInterval = frequencyDeviationToIntervalDeviation(avgCPS, devCPS);
 
     const t = avgInterval + (devConfidence * devInterval);
 

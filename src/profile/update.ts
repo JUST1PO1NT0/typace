@@ -1,6 +1,6 @@
 import { EditProfile, PauseProfile, Profile, ProfileSamples, SessionEditState, TempoProfile, ToleranceProfile } from "@/types";
 import ProfileController from "./profile";
-import { EMA, getAlpha, getIntervals, intervalsToFrequency, intervalsToFrequencyDeviation, meanAvg, stdDev } from "@/engine/util";
+import { EMA, getAlpha, getIntervals, intervalsToFrequency, intervalsToFrequencyDeviation, meanAvg, stdDev, weightedEMA } from "@/engine/util";
 
 const alpha_min = 0.04;
 const alpha_max = 0.135;
@@ -125,7 +125,7 @@ export const updateLocalTempoProfile = (tempoProfile: TempoProfile, timestamps: 
     const intervals = getIntervals(timestamps);
     if(intervals.length < 1) return tempoProfile;
 
-    tempoProfile.meanCPS = EMA(tempoProfile.meanCPS, intervalsToFrequency(intervals), s);
+    tempoProfile.meanCPS = weightedEMA(tempoProfile.meanCPS, intervalsToFrequency(intervals), tempoProfile.deviation, s);
     tempoProfile.deviation = EMA(tempoProfile.deviation, intervalsToFrequencyDeviation(intervals), s);
     tempoProfile.samples++
 
@@ -142,10 +142,11 @@ export const updateLocalPauseProfile = (pauseProfile: PauseProfile, intervals: n
         intervals = [...intervals, pauseProfile.meanPause * multiplier]
     }
     if(intervals.length === 0) return pauseProfile;
+
     const mean = meanAvg(intervals);
     const dev = stdDev(intervals, mean);
 
-    pauseProfile.meanPause = EMA(pauseProfile.meanPause, mean, s);
+    pauseProfile.meanPause = weightedEMA(pauseProfile.meanPause, mean, dev, s);
     pauseProfile.deviation = EMA(pauseProfile.deviation, dev, s)
     pauseProfile.samples++
 

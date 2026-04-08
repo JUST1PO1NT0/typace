@@ -1,6 +1,38 @@
+import { ConfidenceLevel } from "@/profile/update";
+
 export const EMA = (avg: number, value: number, samples: number, alpha: number | null = null) => {
     if(!alpha) alpha = getAlpha(samples);
     return (value * alpha) + (avg * (1 - alpha))
+}
+
+/**
+ * 
+ * @param n currently stored value to calculate z-score
+ * @param observed new value to calculate influence for.
+ * @param dev standard deviation
+ * @param strength deviation confidence interval
+ * @returns influence weight `w`
+ */
+export const getInfluenceWeight = (n: number, observed: number, dev: number, strength: ConfidenceLevel = 2
+): number => {
+    if (!dev || dev === 0) return 1;    
+    const z = Math.abs((observed - n) / dev);
+
+    return 1 / (1 + Math.pow(z / strength, 2));
+};
+
+/**
+ * Returns Exponential Moving Average weighted with an influence deviation clamp
+ * @param n currently stored value to have EMA applied to.
+ * @param dev currently stored standard deviation from profile.
+ * @param observed observed new value to move the average.
+ * @param samples number of samples recorded into profile.
+ */
+export const weightedEMA = (n: number, observed: number, dev: number, samples: number) => {
+    const a = getAlpha(samples);
+    const w = getInfluenceWeight(n, observed, dev);
+    
+    return EMA(n, observed, samples, (a * w));
 }
 
 export const meanAvg = (values: number[]) => {
@@ -68,6 +100,30 @@ export const getIntervals = (values: number[]): number[] => {
 export const intervalsToFrequency = (intervals: number[]): number => {
     if(intervals.length < 1) return 0;
     return 1000 / meanAvg(intervals);
+}
+
+/**
+ * Converts frequency to mean interval in milliseconds
+ * @param frequency frequency `1000 / mean time between intervals` of events per second
+ * @returns mean interval in milliseconds
+ */
+export const frequencyToMeanInterval = (frequency: number): number => {
+    if(frequency === 0) return 0;
+    return 1000 / frequency;
+}
+
+/**
+ * Converts frequency deviation to interval deviation in milliseconds
+ * Uses coefficient of variation for approximation
+ * @param mean mean average of the intervals
+ * @param dev standard deviation of the intervals
+ * @returns Estimated standard deviation in milliseconds
+ */
+export const frequencyDeviationToIntervalDeviation = (mean: number, dev: number): number => {
+    if (mean <= 0 || dev <= 0) return 0;
+    const meanInterval = frequencyToMeanInterval(mean);
+    const cv = dev / mean; // Coefficient of variation
+    return meanInterval * cv;
 }
 
 /**

@@ -33,7 +33,7 @@ export const serialiseProfile = (profile: Profile): ProfileCookie => ({
     pc: Math.round(profile.pauseProfile.meanPause), 
     pd: Math.round(profile.pauseProfile.deviation), 
     er: Math.round(profile.editProfile.editRate * 100) / 100,
-    ft: String((profile.toleranceProfile.fireTolerance).toFixed(5)),
+    ft: parseInt(profile.toleranceProfile.fireTolerance.toFixed(3)),
     ts: profile.lastUpdated ?? Date.now()
 });
 

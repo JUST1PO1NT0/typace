@@ -2,24 +2,30 @@ import { useAdaptiveDebounceProps } from "../types"
 import session from "@/engine/session";
 import React from "react";
 
+type NativeEvent = React.InputEvent<HTMLInputElement | HTMLTextAreaElement>;
 
 const useAdaptiveDebounce: useAdaptiveDebounceProps = (onFire, minFireLength) => {
+    const handleEvent = (e: NativeEvent, inputType: string, isComposing: boolean) => {
+        const target = e.currentTarget;
+        if (!target) return;
+        
+        const value = target.value;
+        const fire = () => onFire(value);
+        
+        session.addEvent(value.length, inputType, isComposing, Date.now(), fire);
+    };
+    
     const bind = {
-        onInput(e: React.InputEvent<HTMLInputElement | HTMLTextAreaElement>) {
-            const length = e.currentTarget.value.length;
-            const inputType = e.nativeEvent.inputType;
-            const isComposing = e.nativeEvent.isComposing ?? false;
-            const timestamp = e.timeStamp;
-
-            const fire = (): void => onFire("e.currentTarget.value");
-
-            session.addEvent(length, inputType, isComposing, timestamp, fire)
+        onInput(e: NativeEvent) {
+            const nativeEvent = e.nativeEvent as InputEvent;
+            handleEvent(e, nativeEvent.inputType, nativeEvent.isComposing ?? false);
+        },
+        onCompositionEnd(e: NativeEvent) {
+            handleEvent(e, 'insertCompositionText', false);
         }
-    }
+    };
 
-    return {
-        bind
-    }
-}
+    return { bind };
+};
 
 export default useAdaptiveDebounce
