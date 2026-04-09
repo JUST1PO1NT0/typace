@@ -4,5 +4,6 @@ dist/*
 *.tgz
 **.OLD
 .idea
+*.tar.gz
 *.tgz
 .DS_Store

@@ -23,5 +23,5 @@ export const DEFAULT_PROFILE: Profile = {
         fireTolerance: 0.65,
         samples: 0
     },
-    lastUpdated: undefined
+    lastUpdated: Date.now()
 }

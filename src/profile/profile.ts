@@ -1,29 +1,31 @@
-import { Profile } from "@/types";
-import { fetchProfile, pushProfile } from "@/engine/cookie";
+import { Config, Profile } from "@/types";
 import { DEFAULT_PROFILE } from "./default";
+import { fetchProfile, pushProfile } from "@/engine/storage";
 
 class ProfileController {
     private static instance: ProfileController;
-    
-    // FIX: TS(264) 
     private profile: Profile = DEFAULT_PROFILE; 
     private listeners: ((profile: Profile | null) => void)[] = [];
+    
+    // Add a guard to prevent multiple reads if the hook mounts multiple times
+    private isInitialised: boolean = false;
 
     private constructor () {}
 
     static getInstance (): ProfileController {
         if(!ProfileController.instance) {
             ProfileController.instance = new ProfileController();
-            ProfileController.instance.initialise();
         }
-
         return ProfileController.instance;
     }
 
-    private async initialise(): Promise<void> {
-        const fetchedProfile = await fetchProfile();
+    async initialise(config: Config): Promise<void> {
+        if (this.isInitialised) return; 
         
-        // FIX: Only overwrite and notify if a profile was actually found in cookies
+        this.isInitialised = true;
+
+        const fetchedProfile = await fetchProfile(config);
+        
         if (fetchedProfile) {
             this.profile = fetchedProfile;
             this.notifyListeners(); 
@@ -31,24 +33,23 @@ class ProfileController {
     }
 
     setProfile(profile: Profile): void {
-        this.profile = { ...profile, lastUpdated: Date.now()}
+        this.profile = { ...profile, lastUpdated: Date.now()};
         this.notifyListeners();
     }
 
-    updateProfile(update: Partial<Profile>): void {
+    updateProfile(update: Partial<Profile>, config: Config): void {
         if(!this.profile) return;
         this.profile = {
             ...this.profile,
             ...update,
             lastUpdated: Date.now()
-        }
-        this.notifyListeners()
-        pushProfile(this.profile)
+        };
+        this.notifyListeners();
+        pushProfile(this.profile, config);
     }
 
     getProfile(): Profile {
-        console.log("asked for profile and got this", this.profile)
-        return this.profile
+        return this.profile;
     }
 
     subscribe(listener: (profile: Profile | null) => void): () => void {
@@ -62,4 +63,4 @@ class ProfileController {
 }
 
 const profileController = ProfileController.getInstance();
-export default profileController; 
+export default profileController;

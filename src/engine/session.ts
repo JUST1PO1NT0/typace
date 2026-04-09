@@ -2,7 +2,7 @@ import { getEditLikelihood, getPauseTimeout, getTypingTimeout, shouldCountAsTypi
 import { updateEditProfile, updateLocalPauseProfile, updateLocalTempoProfile, updateToleranceProfile } from "@/profile/update";
 import { truncateOldTimestamps } from "./util";
 import { sessionStore } from "./store";
-import { PauseProfile, SessionState } from "@/types";
+import { Config, PauseProfile, SessionState } from "@/types";
 import profileController from "@/profile/profile";
 
 const CYCLE_DURATION_MS = 20;
@@ -33,14 +33,12 @@ const stopSession = () => {
         clearInterval(intervalId);
         intervalId = null;
         const state = sessionStore.getState();
-        console.log("Pushable state:", state)
         profileController.updateProfile({
             ...state.profile,
             editProfile: updateEditProfile(state.profile.editProfile, state.edit)
-        });
+        }, state.config);
         
         sessionStore.setState(() => sessionStore.getInitialState());
-        console.log("Reset state:", sessionStore.getState())
     } else {
         throw new Error("Interval ID not found. Execution failed.");
     }
@@ -175,7 +173,7 @@ const processTick = () => {
     });
 };
 
-const addEvent = (length: number, inputType: string, isComposing: boolean, timestamp: number = Date.now(), fire: () => void) => {
+const addEvent = (length: number, inputType: string, isComposing: boolean, timestamp: number = Date.now(), fire: () => void, config: Config) => {
     if (!intervalId) startSession();
 
     if(isComposing) return;
@@ -210,6 +208,7 @@ const addEvent = (length: number, inputType: string, isComposing: boolean, times
                 ...state.fire,
                 fire: fire
             },
+            config: config
         };
     });
 };

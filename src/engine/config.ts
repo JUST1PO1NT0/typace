@@ -1,14 +1,9 @@
 import { Config } from "@/types";
 
-const config: Config = {
-    weight: {
-        tempo: 0.3,
-        pause: 0.5,
-        edit: 0.2
-    },
-    allowCrossSiteCookies: true,
-    useLocalStorage: false,
-    disableLearning: false
+const DEFAULT_CONFIG: Config = {
+    persistentStorage: false,
+    useCookie: false,
+    cookieMaxAgeDays: 180,
 }
 
-export default config;
+export default DEFAULT_CONFIG;

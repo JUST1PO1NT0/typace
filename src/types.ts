@@ -86,49 +86,85 @@ export type Profile = {
      * Tolerance data about the user with `fireTolerance` and number of samples taken.
      */
     toleranceProfile: ToleranceProfile;
-    lastUpdated?: number;
+    lastUpdated: number;
+}
+
+export type NativeEvent = React.InputEvent<HTMLInputElement | HTMLTextAreaElement>;
+
+type useAdaptiveDebounceReturn = {
+    bind: { onInput: (e: NativeEvent) => void, onCompositionEnd: (e: NativeEvent) => void } | any,
+    /**
+     * An object with variables typace collected into session state.
+     */
+    debug?: SessionState,
+    /**
+     * Method to manually delete profile data saved by typace
+     */
+    destroy: () => void,
 }
 
 export type useAdaptiveDebounceProps = ( 
     onFire: (value: any) => any,
-    minChars?: number,
     config?: Config,
-) => any//=> { bind: any, readiness: number, fireNow: () => any};
+) => useAdaptiveDebounceReturn
+
+//export type Config = {
+    //weight?: {
+    //    /**
+    //    *   Controls how significant to readiness score the typing speed and typing speed variance is.
+    //    *   Higher values lower readiness score for fast and even. Lower values lower readiness score for slow and uneven.
+    //    */
+    ////    tempo?: number;
+    //    /**
+    //     *   Controls how significant pauses are to the readiness score. 
+    //     *   Higher values lower readiness, lower values increase readiness.
+    //     */
+    //    pause?: number;
+    //    /**
+    //     * Controls how significant editing is to the readiness score.
+    //     * Higher values lower readiness score when user is editing, lower values decrease the score to a lesser extent.
+    //     */
+    //    edit?: number;
+    //}
+    ///**
+    // * If true, only same-site cookies will by used and created for profiling.
+    // * @remarks Incompatible with useLocalStorage.
+    // * @default true
+    // */
+    //allowCrossSiteCookies?: boolean;
+    ///**
+    //* If true, cookies will be ignored for this input field and profiling.\
+    //* @default false
+    //*/
+    //useLocalStorage?: boolean;
+    ///**
+    //* If true, typace will not use data from this this field for learning.\
+    //* @default false
+    //*/
+    //disableLearning?: boolean;
+//}
 
 export type Config = {
-    weight?: {
-        /**
-        *   Controls how significant to readiness score the typing speed and typing speed variance is.
-        *   Higher values lower readiness score for fast and even. Lower values lower readiness score for slow and uneven.
-        */
-        tempo?: number;
-        /**
-         *   Controls how significant pauses are to the readiness score. 
-         *   Higher values lower readiness, lower values increase readiness.
-         */
-        pause?: number;
-        /**
-         * Controls how significant editing is to the readiness score.
-         * Higher values lower readiness score when user is editing, lower values decrease the score to a lesser extent.
-         */
-        edit?: number;
-    }
     /**
-     * If true, only same-site cookies will by used and created for profiling.
-     * @remarks Incompatible with useLocalStorage.
-     * @default true
+     * Flag to determine whether any data collected by typace should be stored after the session terminates.
+     * @remarks Will store data in `localStorage` unless a separate, `useCookie` flag is enabled.
+     * @remarks **DO NOT** enable this flag in deployed app unless you have the user's prior consent (see `README.md`)
+     * @default false
      */
-    allowCrossSiteCookies?: boolean;
+    persistentStorage: boolean;
     /**
-    * If true, cookies will be ignored for this input field and profiling.\
-    * @default false
-    */
-    useLocalStorage?: boolean;
+     * Flag to determine whether a cookie should be used instead of `localStorage` for storing user profile.
+     * @remarks Will compare cookie to localStorage, if present. Newer data will be used.
+     * @remarks **DO NOT** enable this flag in deployed app unless you have taken the extra steps needed to disclose this storage method to the user.
+     * @default false
+     */
+    useCookie?: boolean;
     /**
-    * If true, typace will not use data from this this field for learning.\
-    * @default false
-    */
-    disableLearning?: boolean;
+     * Duration (in days) for which the profile cookie should persist on the user's device.
+     * @remarks You **must** disclose this exact duration in deployed app.
+     * @default 180 (days)
+     */
+    cookieMaxAgeDays?: number;
 }
 
 export type SessionEditState = {
@@ -184,7 +220,8 @@ export type SessionState = {
     edit: SessionEditState;
     pause: SessionPauseState;
     fire: SessionFireState;
-    terminated: boolean,
+    terminated: boolean;
+    config: Config;
 }
 
 /**

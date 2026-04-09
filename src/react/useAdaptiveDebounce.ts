@@ -1,21 +1,31 @@
-import { SessionState, useAdaptiveDebounceProps } from "../types"
+import { NativeEvent, SessionState, useAdaptiveDebounceProps } from "../types"
+import DEFAULT_CONFIG from "@/engine/config";
 import session from "@/engine/session";
 import { sessionStore } from "@/engine/store";
 import React, { useEffect, useState } from "react";
+import profileController from "@/profile/profile"; // Ensure this is imported
+import { destroy } from "@/engine/storage";
 
-type NativeEvent = React.InputEvent<HTMLInputElement | HTMLTextAreaElement>;
-
-const useAdaptiveDebounce: useAdaptiveDebounceProps = (onFire, minFireLength) => {
+const useAdaptiveDebounce: useAdaptiveDebounceProps = (onFire, config) => {
     const [debug, setDebug] = useState<SessionState>();
+
+    const mergedConfig = {
+        persistentStorage: DEFAULT_CONFIG.persistentStorage,
+        useCookie: DEFAULT_CONFIG.useCookie,
+        cookieMaxAgeDays: DEFAULT_CONFIG.cookieMaxAgeDays,
+        ...config
+    };
     
     useEffect(() => {
+        profileController.initialise(mergedConfig);
+
         const unsubscribe = sessionStore.subscribe((state) => setDebug(state));
         setDebug(sessionStore.getState());
 
         return () => {
             unsubscribe();
-        }
-    }, [])
+        };
+    }, [mergedConfig]);
 
     const handleEvent = (e: NativeEvent, inputType: string, isComposing: boolean) => {
         const target = e.currentTarget;
@@ -24,7 +34,7 @@ const useAdaptiveDebounce: useAdaptiveDebounceProps = (onFire, minFireLength) =>
         const value = target.value;
         const fire = () => onFire(value);
         
-        session.addEvent(value.length, inputType, isComposing, Date.now(), fire);
+        session.addEvent(value.length, inputType, isComposing, Date.now(), fire, mergedConfig);
     };
     
     const bind = {
@@ -37,7 +47,7 @@ const useAdaptiveDebounce: useAdaptiveDebounceProps = (onFire, minFireLength) =>
         }
     };
 
-    return { bind, debug };
+    return { bind, debug, destroy };
 };
 
-export default useAdaptiveDebounce
+export default useAdaptiveDebounce;

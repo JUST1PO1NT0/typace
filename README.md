@@ -3,6 +3,27 @@
 
 This minimal, privacy-focused React library collects data as the user typing to leverage the power of statistics to determine when the search should fire. It resolves the problem of 300ms debounce where slow typers trigger search with every character they type, but fast typers are punished by the non-adaptive logic. This algorithm collects anonymised data about typing behaviour, such as typing speed, fire tolerance (how much this user prefers early fires), how often the user edits, and thinking (pause) times, all stored in a signle cookie. Implementation is minimal, with configs to come in the beta stage of development.
 
+## LEGAL: EU & UK GDPR & ePrivacy Compliance (typing biometrics)
+This library measures **keystroke dynamics** (typing cadence, edit rate, pause times, fire tolerance). Under GDPR and the ePrivacy directive, this data is classified as **Behavioural Biometric Data** and constitutes **Personally Identifiable Information** (PII).
+
+**Storing this data persistently (cookies, localStorage, IndexedDB, etc.) requires prior, *granular*, opt-in consent.**
+
+#### The "Strictly Necessary" exemption does NOT apply
+Since search suggestions may act perfectly without profiling (the world existed before this library), you **cannot** rely on "Legitimate Interest" or hide this under "Functional/ Preferences" cookies.
+
+### What this means for me and my website?
+
+If you enable the `persistentStorage: true` flag in production, you **MUST** implement the following before deploying your app:
+
+- In your Cookie Consent Banner, add a **separate, unchceked** toggle category named *Experience* or *Adaptive Search Response*.
+- **DO NOT** bundle this consent with "Necessary" or "Statistics" cookies.
+- Update your Privacy Policy to list "Keystroke dynamics/ Typing Behavioural Patterns" under the section "Data we collect automatically" or similar.
+- If a user withdraws consent, you must call the library's `destroy()` method or manually clear the stored profile.
+
+You may also choose between storing this data within `localStorage` or opt for a cookie by enabling the `useCookie: true` flag. Enabling a cookie is different legally as it is sent to the backend with every request.
+
+At the bottom of this text, you may find suggested entries to add to your cookie consent banner and privacy policy for both pathways.
+
 ## Usage
 **8 April 2026 NOTE: This package has not yet been published to npm registry**
 
@@ -27,3 +48,27 @@ Implementing typace has been made as easy as possible. Into your input element, 
 I'm very interested in making this useful for websites of all sizes, where one typing profile is shared everywhere for the library to access, so that websites which do not receive a lot of traffic may benefit from the user profiles accumulated from larger ones, or accross hundreds of smaller ones. My original idea was implementing a cookie which is cross-domain, but I have not found a solution that doesn't involve hosting a database and inserting an iframe, for which I do not have sufficient resources. If you have any ideas or resources which could lead to an implementation of this idea, *please* contact.
 
 I am keen on improving the mathematics in this repository and storing more data which could lead to better approximations of debounce times. Additionally, I am interested in different approaches to better analyse the data received. Feel free to fork this repository and contact for assistance. 
+
+## Legal entries
+### Storage in `localStorage`:
+This is the lower-risk, privacy-forward implementation. Data remains on the user's device and is never automatically transmitted to your infrastructure.
+
+#### Cookie Banner Toggle Text:
+> Adaptive Search Response: Stores a profile of your typing rhythm locally on your device to adjust search suggestion speed. This data never leaves your browser and is not accessible to us or third parties.
+
+#### Privacy Policy Entry:
+> Local Typing Profile: With your explicit consent, we store an anonymous profile of your typing and searching behaviour (characters per second, edit rate, mean time between stopping input and next input, and tolerance for early results) locally in your browser's storage. This data is used solely to adjust the timing of search suggestions to match your input style. This information is **not transmitted to our servers** and is not accessible to any third party. You may clear this data at any time by clearing your browser storage for this site.
+
+### Storage in cookies
+
+Using cookies for this data causes the profile to be trasmitted in HTTP headers with every request to your domain. By implementing cookies in a deployed app, you acknowledge:
+
+1. The data will appear in your server access logs.
+2. You are now collecting biometric-adjacent data centrally (triggering stricter GDPR Article 9)
+3. You **MUST** define a retention period for server logs containing this data.
+
+#### Cookie Banner Toggle Text:
+> Adaptive Search Response: Stores a profile of your typing rhythm in a browser cookie. This data is transmitted to our servers with your search activity to optimize responsiveness. It is [not] used for advertising, and is retained in server logs for [X Days].
+
+#### Privacy Policy Entry:
+> Typing Profile Cookie: With your explicit consent, we place a cookie on your device that records your typing and searching behaviour (characters per second, edit rate, mean time between stopping input and next input, and tolerance for early results). This cookie is transmitted to our servers alongside your search queries to calibrate real-time response delays. We retain this data in raw server logs for a maximum of [X] days before automated deletion. This data is [not] shared with third-party analytics or advertising networks.

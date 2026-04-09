@@ -1,6 +1,7 @@
 import { createStore } from 'zustand/vanilla';
 import { SessionState } from "@/types";
 import profileController from '@/profile/profile';
+import DEFAULT_CONFIG from './config';
 
 const initialState: SessionState = {
     profile: {
@@ -29,7 +30,8 @@ const initialState: SessionState = {
     fire: {
         hasFired: false
     },
-    terminated: false
+    terminated: false,
+    config: DEFAULT_CONFIG
 };
 
 export const sessionStore = createStore<SessionState>(() => initialState);
