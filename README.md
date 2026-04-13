@@ -42,7 +42,37 @@ const InputComponent: React.FC = () => {
 ```
 
 Implementing typace has been made as easy as possible. Into your input element, simply spread `bind` received from the hook.
-`useAdaptiveDebounce` will also expose debug typing session data if needed.
+
+### Configuration
+
+13 April 2026: Currently, *typace* does not allow for much configuration, but there are plans to expand configurable aspects of it, such as minimum fire length, etc.
+
+Features to do with writing and saving of data are restricted by default unless there is an overriding configuration. To supply an overriding configuration, put it as an argument into `useAdaptiveDebounce`:
+
+```ts
+const config: Config = {
+  persistentStorage: true,
+  useCookie: false,
+  cookieMaxAgeDays = 30
+}
+
+const { bind } = useAdaptiveDebounce(handeFire(value), config)
+```
+
+If a configuration is not specified, the *default configuration* will be used instead (persistent storage and cookies disabled, max cookie age 180 days).
+
+### Debugging variables
+
+`useAdaptiveDebounce` will also expose debug typing session data if needed. It contains all the variables in use by a running session:
+
+```ts
+const { bing, debug } = useAdaptiveDebounce(handleFire(value));
+
+var typingEvents = debug.timestamps; // all typing events currently stored within session
+```
+
+The structure of the debug data is located within TypeScript type declarations.
+Please refrain from saving debug data in a deployed app unless prior user consent is given.
 
 ## Contributing
 I'm very interested in making this useful for websites of all sizes, where one typing profile is shared everywhere for the library to access, so that websites which do not receive a lot of traffic may benefit from the user profiles accumulated from larger ones, or accross hundreds of smaller ones. My original idea was implementing a cookie which is cross-domain, but I have not found a solution that doesn't involve hosting a database and inserting an iframe, for which I do not have sufficient resources. If you have any ideas or resources which could lead to an implementation of this idea, *please* contact.
