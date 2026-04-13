@@ -10,11 +10,13 @@
   "scripts": {
     "compile": "tsc && tsc-alias",
     "build": "tsup src/index.ts --dts --format esm,cjs --out-dir dist --clean && npm pack",
-    "test": "jest"
+    "test": "jest",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "jest-environment-jsdom": "^30.2.0",
     "react": "^19.2.4",
+    "ts-node": "^10.9.2",
     "typescript": "^5.1.3",
     "zustand": "^5.0.12"
   },
@@ -27,7 +29,15 @@
     "tsc-alias": "^1.8.16",
     "tsup": "^8.5.1"
   },
-  "keywords": ["react", "debounce", "adaptive", "profiling", "data analysis", "private", "privacy"],
+  "keywords": [
+    "react",
+    "debounce",
+    "adaptive",
+    "profiling",
+    "data analysis",
+    "private",
+    "privacy"
+  ],
   "bugs": {
     "url": "https://github.com/JUST1PO1NT0/typace/issues"
   },

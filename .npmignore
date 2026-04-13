@@ -6,3 +6,8 @@ tsup.config.ts
 jest.config.js
 *.tar.gz
 *.tgz
+.github/
+.idea/
+DS_STORE
+.gitignore
+coverage/

@@ -97,7 +97,7 @@ export const getEditLikelihood = (editState: SessionEditState, editRate: number,
     const delta = Math.abs(editState.length - editState.prevLength)
 
     if(delta === 0) {
-        return { ...editState, effort: editState.effort++, consecutiveEdits: 0}
+        return { ...editState, effort: editState.effort + 1, consecutiveEdits: 0}
     }
     const expectedEditSize = Math.max(1, 1 / (editRate || 0.01));
 
