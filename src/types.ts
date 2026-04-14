@@ -167,6 +167,41 @@ export type Config = {
      * @default 180 (days)
      */
     cookieMaxAgeDays?: number;
+    /** The minimum number of characters required in the input field before the 
+     *  search is allowed to fire. Prevents premature API calls for single-letter queries.
+     *  @default 0
+     */
+    minFireLength?: number;
+
+    /** If true, pressing the 'Enter' key will bypass all adaptive delays and 
+     *  trigger the search immediately. 
+     *  @default true
+     */
+    fireOnEnter?: boolean;
+
+    /** If true, pasting text into the input will trigger an immediate search 
+     *  instead of waiting for the user's typing cadence to be analysed.
+     *  @default false
+     */
+    fireOnPaste?: boolean;
+
+    /** The duration (in milliseconds) to extend the typing timeout while the user 
+     *  is using an IME (Input Method Editor) for complex character composition.
+     *  @default 10000
+     */
+    compositionBuffer?: number;
+
+    /** * The absolute minimum delay (in milliseconds) the engine must wait before firing, 
+     *  regardless of how fast the user is typing. Useful for rate-limiting.
+     *  @default 0
+     */
+    minFireDelay?: number;
+
+    /** The absolute maximum time (in milliseconds) a user can type continuously 
+     * before a search is forced to fire, even if no pause is detected.
+     * @default 0
+     */
+    maxWait?: number;
 }
 
 export type SessionEditState = {
