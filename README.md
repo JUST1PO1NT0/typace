@@ -44,21 +44,24 @@ Implementing typace has been made as easy as possible. Into your input element, 
 
 ### Configuration
 
-13 April 2026: Currently, *typace* does not allow for much configuration, but there are plans to expand configurable aspects of it, such as minimum fire length, etc.
-
 Features to do with writing and saving of data are restricted by default unless there is an overriding configuration. To supply an overriding configuration, put it as an argument into `useAdaptiveDebounce`:
 
 ```ts
 const config: Config = {
   persistentStorage: true,
   useCookie: false,
-  cookieMaxAgeDays = 30
+  cookieMaxAgeDays = 30,
+  minFireLength: 8,
+  fireOnEnter: true,
+  fireOnPaste: true,
+  minFireDelay: 100,
+  maxWait: 0
 }
 
 const { bind } = useAdaptiveDebounce(handeFire(value), config)
 ```
 
-If a configuration is not specified, the *default configuration* will be used instead (persistent storage and cookies disabled, max cookie age 180 days).
+If a configuration is not specified, the *default configuration* will be used instead. See variable type configurations for their default values.
 
 ### Debugging variables
 

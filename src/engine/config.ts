@@ -7,7 +7,7 @@ const DEFAULT_CONFIG: Config = {
     minFireLength: 0,
     fireOnEnter: true,
     fireOnPaste: false,
-    minFireDelay: 0,
+    minFireDelay: 100,
     maxWait: 0
 }
 

@@ -110,42 +110,6 @@ export type useAdaptiveDebounceProps = (
     destroy: () => void,
 }
 
-//export type Config = {
-    //weight?: {
-    //    /**
-    //    *   Controls how significant to readiness score the typing speed and typing speed variance is.
-    //    *   Higher values lower readiness score for fast and even. Lower values lower readiness score for slow and uneven.
-    //    */
-    ////    tempo?: number;
-    //    /**
-    //     *   Controls how significant pauses are to the readiness score. 
-    //     *   Higher values lower readiness, lower values increase readiness.
-    //     */
-    //    pause?: number;
-    //    /**
-    //     * Controls how significant editing is to the readiness score.
-    //     * Higher values lower readiness score when user is editing, lower values decrease the score to a lesser extent.
-    //     */
-    //    edit?: number;
-    //}
-    ///**
-    // * If true, only same-site cookies will by used and created for profiling.
-    // * @remarks Incompatible with useLocalStorage.
-    // * @default true
-    // */
-    //allowCrossSiteCookies?: boolean;
-    ///**
-    //* If true, cookies will be ignored for this input field and profiling.\
-    //* @default false
-    //*/
-    //useLocalStorage?: boolean;
-    ///**
-    //* If true, typace will not use data from this this field for learning.\
-    //* @default false
-    //*/
-    //disableLearning?: boolean;
-//}
-
 export type Config = {
     /**
      * Flag to determine whether any data collected by typace should be stored after the session terminates.
@@ -193,7 +157,7 @@ export type Config = {
 
     /** * The absolute minimum delay (in milliseconds) the engine must wait before firing, 
      *  regardless of how fast the user is typing. Useful for rate-limiting.
-     *  @default 0
+     *  @default 100
      */
     minFireDelay?: number;
 
@@ -257,6 +221,11 @@ export type SessionState = {
     edit: SessionEditState;
     pause: SessionPauseState;
     fire: SessionFireState;
+    /** `unix` time (in miliseconds) when session began.
+     */
+    start: number;
+    /** Flag if the session has been terminated
+     */
     terminated: boolean;
     config: Config;
 }
