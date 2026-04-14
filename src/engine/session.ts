@@ -2,7 +2,7 @@ import { getEditLikelihood, getPauseTimeout, getTypingTimeout, shouldCountAsTypi
 import { updateEditProfile, updateLocalPauseProfile, updateLocalTempoProfile, updateToleranceProfile } from "@/profile/update";
 import { truncateOldTimestamps } from "./util";
 import { sessionStore } from "./store";
-import { Config, PauseProfile, SessionState } from "@/types";
+import { Config, PauseProfile } from "@/types";
 import profileController from "@/profile/profile";
 
 const CYCLE_DURATION_MS = 20;
@@ -10,20 +10,10 @@ const HISTORY_LIMIT_MS = 5000;
 
 let intervalId: NodeJS.Timeout | null = null;
 
-/**
- * Facilitates atomic mutations to prevent overwriting data between event-driven and time-driven flows
- * @param updater function with previous value of `state`
- */
-//const mutate = (updater: (curr: typeof state) => Partial < typeof state > ) => {
-//    state = {
-//        ...state,
-//        ...updater(state)
-//    };
-//}
-
 
 const startSession = () => {
     if (!intervalId) {
+        sessionStore.setState((state) => ({...state, start: Date.now()}))
         intervalId = setInterval(processTick, CYCLE_DURATION_MS);
     }
 };
@@ -63,6 +53,14 @@ const processTick = () => {
             ...curr, 
             timestamps: cleanedTimestamps 
         };
+
+        // check if lifespan exceeds maximum wait time
+        if(state.config.maxWait! > -1 && (now - state.start > state.config.maxWait!) && (state.config.strictMinLength ? state.edit.length >= state.config.minFireLength! : true)) {
+            return {
+                ...state,
+                terminated: true
+            }
+        }
 
         if (state.typing.timeout > now) {
             // Cleaned up nested ternaries: Only calculate interval/profile if we have a valid, non-false-positive start
@@ -111,6 +109,7 @@ const processTick = () => {
             interval: t
         };
 
+        // time-based check and check for firing function presence
         if (pauseTimeout > now || !state.fire.fire) {
             return {
                 ...state,
@@ -118,8 +117,15 @@ const processTick = () => {
             };
         }
 
-        if (!state.fire.hasFired) { 
-            console.log("Data before fire:", state);
+        // config-based checks
+        if(state.config.minFireLength! > state.edit.length || now - state.start < state.config.minFireDelay!) {
+            return {
+                ...state,
+                pause: updatedPause
+            }
+        }
+
+        if (!state.fire.hasFired) {
             state.fire.fire();
         }
         
@@ -176,6 +182,16 @@ const processTick = () => {
 const addEvent = (length: number, inputType: string, isComposing: boolean, timestamp: number = Date.now(), fire: () => void, config: Config) => {
     if (!intervalId) startSession();
 
+    if(
+        ((inputType === "insertParagraph" && config.fireOnEnter) 
+         || 
+         (inputType === "insertFromPaste" && config.fireOnPaste))
+        &&
+        (config.strictMinLength ? length >= config.minFireLength! : true)
+    ) {
+        sessionStore.setState((state) => ({...state, terminated: true}));
+    }
+
     if(isComposing) return;
 
     const isTyping = shouldCountAsTyping(inputType, isComposing);
@@ -215,5 +231,6 @@ const addEvent = (length: number, inputType: string, isComposing: boolean, times
 
 export default {
     addEvent,
-    stopSession
+    stopSession,
+    CYCLE_DURATION_MS
 };

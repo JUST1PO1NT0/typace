@@ -110,42 +110,6 @@ export type useAdaptiveDebounceProps = (
     destroy: () => void,
 }
 
-//export type Config = {
-    //weight?: {
-    //    /**
-    //    *   Controls how significant to readiness score the typing speed and typing speed variance is.
-    //    *   Higher values lower readiness score for fast and even. Lower values lower readiness score for slow and uneven.
-    //    */
-    ////    tempo?: number;
-    //    /**
-    //     *   Controls how significant pauses are to the readiness score. 
-    //     *   Higher values lower readiness, lower values increase readiness.
-    //     */
-    //    pause?: number;
-    //    /**
-    //     * Controls how significant editing is to the readiness score.
-    //     * Higher values lower readiness score when user is editing, lower values decrease the score to a lesser extent.
-    //     */
-    //    edit?: number;
-    //}
-    ///**
-    // * If true, only same-site cookies will by used and created for profiling.
-    // * @remarks Incompatible with useLocalStorage.
-    // * @default true
-    // */
-    //allowCrossSiteCookies?: boolean;
-    ///**
-    //* If true, cookies will be ignored for this input field and profiling.\
-    //* @default false
-    //*/
-    //useLocalStorage?: boolean;
-    ///**
-    //* If true, typace will not use data from this this field for learning.\
-    //* @default false
-    //*/
-    //disableLearning?: boolean;
-//}
-
 export type Config = {
     /**
      * Flag to determine whether any data collected by typace should be stored after the session terminates.
@@ -167,6 +131,56 @@ export type Config = {
      * @default 180 (days)
      */
     cookieMaxAgeDays?: number;
+    /** 
+     * The minimum number of characters required in the input field before the 
+     *  search is allowed to fire. Prevents premature API calls for single-letter queries.
+     *  @default 1
+     */
+    minFireLength?: number;
+
+    /**
+     *  When enabled, applies `minFireLength` validation to all trigger types including Enter and Paste.
+     *  When disabled, `minFireLength` only applies to regular typing events.
+     *  
+     *  @default false
+     */
+    strictMinLength?: boolean;
+
+    /** 
+     *  If true, pressing the 'Enter' key will bypass all adaptive delays and 
+     *  trigger the search immediately. 
+     *  @default true
+     */
+    fireOnEnter?: boolean;
+
+    /** 
+     *  If true, pasting text into the input will trigger an immediate search 
+     *  instead of waiting for the user's typing cadence to be analysed.
+     *  @default false
+     */
+    fireOnPaste?: boolean;
+
+    /** 
+     *  The duration (in milliseconds) to extend the typing timeout while the user 
+     *  is using an IME (Input Method Editor) for complex character composition.
+     *  @default 10000
+     */
+    compositionBuffer?: number;
+
+    /** 
+     *  The absolute minimum delay (in milliseconds) the engine must wait before firing, 
+     *  regardless of how fast the user is typing. Useful for rate-limiting.
+     *  @default 100
+     */
+    minFireDelay?: number;
+
+    /** 
+     * The absolute maximum time (in milliseconds) a user can type continuously 
+     * before a search is forced to fire, even if no pause is detected.
+     * @remarks set to `-1` to disable.
+     * @default -1
+     */
+    maxWait?: number;
 }
 
 export type SessionEditState = {
@@ -222,6 +236,11 @@ export type SessionState = {
     edit: SessionEditState;
     pause: SessionPauseState;
     fire: SessionFireState;
+    /** `unix` time (in miliseconds) when session began.
+     */
+    start: number;
+    /** Flag if the session has been terminated
+     */
     terminated: boolean;
     config: Config;
 }
