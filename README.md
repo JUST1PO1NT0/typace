@@ -82,6 +82,8 @@ I'm very interested in making this useful for websites of all sizes, where one t
 I am keen on improving the mathematics in this repository and storing more data which could lead to better approximations of debounce times. Additionally, I am interested in different approaches to better analyse the data received. Feel free to fork this repository and contact for assistance. 
 
 ## Legal entries
+**IMPORTANT:** Beacuse I live in a country where GDPR applies, I know that consent it definitely required have some knowledge to be able to put something into the legal section, yet **I am NOT a lawyer, and as such, the entries below are AI-generated**.
+
 ### Storage in `localStorage`:
 This is the lower-risk, privacy-forward implementation. Data remains on the user's device and is never automatically transmitted to your infrastructure.
 
