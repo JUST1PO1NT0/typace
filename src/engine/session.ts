@@ -2,7 +2,7 @@ import { getEditLikelihood, getPauseTimeout, getTypingTimeout, shouldCountAsTypi
 import { updateEditProfile, updateLocalPauseProfile, updateLocalTempoProfile, updateToleranceProfile } from "@/profile/update";
 import { truncateOldTimestamps } from "./util";
 import { sessionStore } from "./store";
-import { Config, PauseProfile, SessionState } from "@/types";
+import { Config, PauseProfile } from "@/types";
 import profileController from "@/profile/profile";
 
 const CYCLE_DURATION_MS = 20;
@@ -55,7 +55,7 @@ const processTick = () => {
         };
 
         // check if lifespan exceeds maximum wait time
-        if(state.start - now > state.config.maxWait!) {
+        if(state.config.maxWait! > -1 && (now - state.start > state.config.maxWait!) && (state.config.strictMinLength ? state.edit.length >= state.config.minFireLength! : true)) {
             return {
                 ...state,
                 terminated: true
@@ -118,7 +118,7 @@ const processTick = () => {
         }
 
         // config-based checks
-        if(state.config.minFireLength! > state.edit.length || state.start - now < state.config.minFireDelay!) {
+        if(state.config.minFireLength! > state.edit.length || now - state.start < state.config.minFireDelay!) {
             return {
                 ...state,
                 pause: updatedPause
@@ -182,8 +182,14 @@ const processTick = () => {
 const addEvent = (length: number, inputType: string, isComposing: boolean, timestamp: number = Date.now(), fire: () => void, config: Config) => {
     if (!intervalId) startSession();
 
-    if((inputType === "insertParagraph" && sessionStore.getState().config.fireOnEnter!) || (inputType === "insertFromPaste" && sessionStore.getState().config.fireOnPaste)) {
-        sessionStore.setState((state) => ({...state, terminated: true}))
+    if(
+        ((inputType === "insertParagraph" && config.fireOnEnter) 
+         || 
+         (inputType === "insertFromPaste" && config.fireOnPaste))
+        &&
+        (config.strictMinLength ? length >= config.minFireLength! : true)
+    ) {
+        sessionStore.setState((state) => ({...state, terminated: true}));
     }
 
     if(isComposing) return;
@@ -225,5 +231,6 @@ const addEvent = (length: number, inputType: string, isComposing: boolean, times
 
 export default {
     addEvent,
-    stopSession
+    stopSession,
+    CYCLE_DURATION_MS
 };

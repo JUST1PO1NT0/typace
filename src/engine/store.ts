@@ -30,7 +30,7 @@ const initialState: SessionState = {
     fire: {
         hasFired: false
     },
-    elapsed: 0,
+    start: 0,
     terminated: false,
     config: DEFAULT_CONFIG
 };
