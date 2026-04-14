@@ -25,7 +25,6 @@ You may also choose between storing this data within `localStorage` or opt for a
 At the bottom of this text, you may find suggested entries to add to your cookie consent banner and privacy policy for both pathways.
 
 ## Usage
-**8 April 2026 NOTE: This package has not yet been published to npm registry**
 
 ```ts
 import { useAdaptiveDebounce } from 'react-typace'
