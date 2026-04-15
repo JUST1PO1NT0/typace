@@ -91,7 +91,7 @@ describe('Session Orchestrator', () => {
 
     describe("Configuration behaviours", () => {
         it("should terminate immediatelly if fireOnEnter is triggered", () => {
-            session.addEvent(5, "insertParagraph", false, Date.now(), fireMock, {...cfg, strictMinLength: false, fireOnEnter: true, minFireLength: 10}),
+            session.addEvent(5, "Enter", false, Date.now(), fireMock, {...cfg, strictMinLength: false, fireOnEnter: true, minFireLength: 10}),
 
             expect(sessionStore.getState().terminated).toBe(true)
         })

@@ -183,12 +183,13 @@ export const updateEditProfile = (editProfile: EditProfile, editState: SessionEd
  * @param newProfile compared obtained (not written) profile
  * @returns filtered profile
  */
-export const compareAndFilter = (oldProfile: Profile, newProfile: Profile): Profile => {
+export const compareAndFilter = (oldProfile: Profile, newProfile: Partial<Profile>): Partial<Profile> => {
     const profiles = ['tempoProfile', 'pauseProfile'] as const;
 
     const deltaSamples = {} as Record<string, number>;
 
     profiles.forEach(profile => {
+        if(!newProfile[profile]) { deltaSamples[profile] = 0; return; }
         deltaSamples[profile] = newProfile[profile].samples - oldProfile[profile].samples;
     });
 

@@ -38,7 +38,7 @@ class ProfileController {
         this.notifyListeners();
     }
 
-    updateProfile(update: Profile, config: Config): void {
+    updateProfile(update: Partial<Profile>, config: Config): void {
         if(!this.profile) return;
         this.profile = {
             ...this.profile,
