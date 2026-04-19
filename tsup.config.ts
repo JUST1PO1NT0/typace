@@ -1,33 +1,30 @@
-import { defineConfig } from 'tsup'
+import { defineConfig, Options } from 'tsup'
+
+const config: Options = {
+  entry: { index: 'src/index.ts' },
+  dts: true,
+  clean: false,
+  minify: true,
+  sourcemap: false,
+  treeshake: true,
+  target: 'es2020',
+  external: ['react'],
+  noExternal: ['zustand'],
+}
 
 export default defineConfig([
   // CommonJS
   {
-    entry: { index: 'src/index.ts' },
+    ...config,
     format: 'cjs',
     outDir: 'dist/cjs',
-    dts: true,
-    clean: false,
-    minify: false,
-    sourcemap: false,
-    target: 'es2020',
-    external: ['react'],
-    noExternal: ['zustand'],
     outExtension: () => ({ js: '.cjs' }),
   },
-
-  // ESModule
+  // EcmaScript Module
   {
-    entry: { index: 'src/index.ts' },
+    ...config,
     format: 'esm',
     outDir: 'dist',
-    dts: true,
-    clean: true,
-    minify: false,
-    sourcemap: false,
-    target: 'es2020',
-    external: ['react'],
-    noExternal: ['zustand'],
     outExtension: () => ({ js: '.mjs' }),
   },
 ])
