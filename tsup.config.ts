@@ -4,7 +4,7 @@ const config: Options = {
   entry: { index: 'src/index.ts' },
   dts: true,
   clean: false,
-  minify: true,
+  minify: false,
   sourcemap: false,
   treeshake: true,
   target: 'es2020',

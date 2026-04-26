@@ -93,8 +93,9 @@ export const getWeightedPauseThreshold: GetWeightedPauseInterval = (timeoutInter
  * @returns `SessionEditState` with updated state variables
  */
 export const getEditLikelihood = (editState: SessionEditState, editRate: number, isTyping: boolean): SessionEditState => {
-    if(!editState.prevLength) editState.prevLength = 0;
-    const delta = Math.abs(editState.length - editState.prevLength)
+    const length = editState.length;
+    const prevLength = editState.prevLength || 0;
+    const delta = Math.abs(length - prevLength)
 
     if(delta === 0) {
         return { ...editState, effort: editState.effort + 1, consecutiveEdits: 0}
@@ -105,7 +106,7 @@ export const getEditLikelihood = (editState: SessionEditState, editRate: number,
         const DECAY_RATE = Math.exp(-delta / expectedEditSize);
         return {
             ...editState,
-            prevLength: editState.length,
+            prevLength: length,
             progress: editState.progress + delta,
             effort: editState.effort + delta,
             consecutiveEdits: 0,
