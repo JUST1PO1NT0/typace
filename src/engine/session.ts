@@ -193,8 +193,6 @@ const addEvent = (length: number, inputType: string, isComposing: boolean, times
         sessionStore.setState((state) => ({...state, terminated: true}));
     }
 
-    if(isComposing) return;
-
     const isTyping = shouldCountAsTyping(inputType, isComposing);
 
     sessionStore.setState((state) => {
@@ -207,10 +205,15 @@ const addEvent = (length: number, inputType: string, isComposing: boolean, times
             timestamps
         );
 
-        const editState = {
+        const editState = isTyping ? 
+        {
             ...state.edit,
             length: length,
             prevLength: state.edit.length,
+        } 
+        : 
+        {
+            ...state.edit
         };
 
         return {
